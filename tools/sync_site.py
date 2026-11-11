@@ -1,5 +1,4 @@
-"""Copy what the site's live demo loads into Pyodide: cimo as one file, scramjit's package, and
-cimo's WebAssembly disassembler (cimo/wat.py in cimo's package).
+"""Copy what the site's live demo loads into Pyodide: cimo as one file and scramjit's package.
 Run after changing scramjit (or to pick up a newer cimo):  python3 tools/sync_site.py
 cimo is the last commit of ../cimo next to this repository, never its uncommitted work, or the commit or tag in
 CIMO_REF (a release: CIMO_REF=v0.0.5); without a checkout, whatever cimo the environment has.
@@ -44,9 +43,6 @@ def sync(cimo_root):
     if cimo_root:
         env['PYTHONPATH'] = os.path.join(cimo_root, 'python')
     subprocess.run([sys.executable, '-m', 'cimo', 'onefile', '-o', os.path.join(OUT, 'cimo.py')], check=True, env=env)
-    wat = os.path.join(cimo_root or '', 'python', 'cimo', 'wat.py')   # cimo's WebAssembly disassembler
-    if cimo_root and os.path.exists(wat):
-        shutil.copy(wat, os.path.join(ROOT, 'docs', 'lab', 'wat.py'))
     print('synced', sorted(os.listdir(os.path.join(OUT, 'scramjit'))), 'and cimo.py',
           os.path.getsize(os.path.join(OUT, 'cimo.py')) // 1024, 'KB')
 

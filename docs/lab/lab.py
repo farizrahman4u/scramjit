@@ -10,7 +10,6 @@ import warnings
 import numpy as np
 
 import scramjit
-from scramjit._runtime import PRELUDE
 
 N = 128
 PRESETS = {
@@ -291,16 +290,14 @@ def set_code(preset, src, compiled):
 
 
 def wasm_text():
-    """The compiled function as WebAssembly text: cimo builds the module from the same C (its cache
-    makes that quick) and cimo's disassembler prints scramjit's kernel."""
+    """The compiled function as WebAssembly text: cimo's disassembler prints scramjit's kernel from
+    the module the page already compiled."""
     f = S.get('fn')
     entry = next((v for v in getattr(f, '_cache', {}).values() if hasattr(v, 'source')), None)
     if entry is None:
         return 'Turn scramjit on to compile.'
-    import cimo.wasm
-    import wat
-    # not cimo's documented API yet: see TODO.md ("Workarounds waiting on cimo")
-    mod, _ = cimo.wasm.build(PRELUDE + entry.source)
+    from cimo import wat
+    mod = entry.module.wasm
     text, sections, others = wat.disassemble(mod, {'sj_kernel'})
     head = [f';; scramjit\'s kernel as WebAssembly text, disassembled from the {len(mod) / 1024:.1f} KB module',
             ';; cimo compiled in this page (sections: ' + ', '.join(f'{n.replace("custom ", "")} {z} B' for n, z in sections) + ')',

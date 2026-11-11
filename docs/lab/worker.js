@@ -25,7 +25,6 @@ async function boot(base) {
   py.FS.writeFile('/home/pyodide/cimo.py', await text(base, 'py/cimo.py'));
   for (const f of SJ_FILES) py.FS.writeFile('/home/pyodide/scramjit/' + f, await text(base, 'py/scramjit/' + f));
   py.FS.writeFile('/home/pyodide/lab.py', await text(base, 'lab/lab.py'));
-  py.FS.writeFile('/home/pyodide/wat.py', await text(base, 'lab/wat.py'));
   py.runPython("import sys; sys.path.insert(0, '/home/pyodide')");
   status('Importing…');
   await py.runPythonAsync('import lab');

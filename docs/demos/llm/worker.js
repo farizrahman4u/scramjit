@@ -96,7 +96,6 @@ async function python() {
   py.FS.writeFile('/home/pyodide/cimo.py', await text('../../py/cimo.py'));
   for (const f of SJ) py.FS.writeFile('/home/pyodide/scramjit/' + f, await text('../../py/scramjit/' + f));
   py.FS.writeFile('/home/pyodide/lab.py', await text('../../lab/lab.py'));
-  py.FS.writeFile('/home/pyodide/wat.py', await text('../../lab/wat.py'));
   py.FS.writeFile('/home/pyodide/demo_py.py', await text('demo_py.py'));
   py.runPython("import sys; sys.path.insert(0, '/home/pyodide')");
   await py.runPythonAsync('import demo_py');

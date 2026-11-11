@@ -326,8 +326,6 @@ Each has a matching entry in cimo's `TODO.md`, which asks for a note here when i
 
 - **The LLM demo moves compiled code by listing what changes in `CIMO_CACHE_DIR`:** issue #2.
 
-- **The demo's WebAssembly tab calls `cimo.wasm.build`:** issue #1.
-
 ## Line counts, what's left
 
 Spills per line, once cimo can report them.
