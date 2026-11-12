@@ -49,7 +49,7 @@ A function falls back to Python entirely when nothing in it compiles, or for a c
 Each fallback emits `scramjit.FallbackWarning` once per function and signature, naming the line and the reason. Loops are compiled when they first run, so the warning can't say yet which ones will fit; preflight can:
 
 ```text
-tally.py:3: FallbackWarning: tally(uint8[:], int64[:]) runs as Python, apart from the loops that compile: dicts aren't compiled
+tally.py:3: FallbackWarning: tally(uint8[:], int64[:]) runs as Python, apart from the loops that compile: dicts aren't compiled unless their keys are constant strings, written where the dict is made (an empty one would gain keys)
 ```
 
 It is a standard Python warning, so the usual filters apply:

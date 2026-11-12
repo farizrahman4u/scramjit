@@ -26,13 +26,13 @@ src/sim.py
   ✓ grid       compiled
   ✗ summarize  runs as Python
       22 │     names = {}
-         │             ^^ dicts aren't compiled
-         │ hint: if the keys are small integers, use an array indexed by key; otherwise do this
-         │       outside the compiled function
+         │             ^^ dicts aren't compiled unless their keys are constant strings, written where the dict is made (an empty one would gain keys)
+         │ hint: if the keys are small integers, use an array indexed by key; otherwise
+         │       do this outside the compiled function
       24 │         names[i] = str(a[i])
          │                    ^^^^^^^^^ calls str()
-         │ hint: keep text and printing out of the function: return numbers and format them
-         │       after the call
+         │ hint: keep text and printing out of the function: return numbers and format
+         │       them after the call
 
 2 compiled, 1 runs as Python
 ```
@@ -69,9 +69,9 @@ scramjit 4.21 s run  ████████████░░░░░░░�
 
 ema: a arrives as float and int, so it compiles once per type
   hint: annotate it, such as a: float, or convert once before calling
-summarize, line 22: dicts aren't compiled
-  hint: if the keys are small integers, use an array indexed by key; otherwise do this outside
-        the compiled function
+summarize, line 22: dicts aren't compiled unless their keys are constant strings, written where the dict is made (an empty one would gain keys)
+  hint: if the keys are small integers, use an array indexed by key; otherwise do this
+        outside the compiled function
 
 summarize runs as Python
 ```

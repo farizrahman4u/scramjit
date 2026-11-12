@@ -185,13 +185,13 @@ except CompileError as e:
 ```
 $ scramjit preflight src/
 src/sim.py
-  ✓ ema        compiled
-  ✓ grid       compiled
-  ✗ summarize  runs as Python
-      22 │     names = {}
-         │             ^^ dicts aren't compiled
-         │ hint: if the keys are small integers, use an array indexed by key; otherwise do this
-         │       outside the compiled function
+  ✓ ema     compiled
+  ✓ scale   compiled
+  ✗ report  runs as Python
+      22 │         lines.append(f'{i}: {a[i]:.3f}')
+         │                      ^^^^^^^^^^^^^^^^^^ f-strings aren't compiled
+         │ hint: keep text and printing out of the function: return numbers and format
+         │       them after the call
 
 2 compiled, 1 runs as Python
 ```
