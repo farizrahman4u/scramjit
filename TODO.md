@@ -535,3 +535,8 @@ Spills per line, once cimo can report them.
       loop and what dropping them measured, next to a rewrite that lets scramjit prove the index (the histogram's
       `0 <= k < nb`), since without checks a bad index corrupts memory instead of raising. Also from the case study:
       arguments wrapped in `float()`, `int()` or `np.ascontiguousarray()` that make no difference (issue #6).
+25. **Reductions as numbers in an array expression:** `y = (x - x.mean()) / x.std()` falls back ("an array expression
+    with a call in it"), while `m, s = x.mean(), x.std()` and then `(x - m) / s` compiles. `ew_pure` admits names,
+    constants, attributes and numpy or `math` calls on those, not reductions. A reduction of an array the expression
+    doesn't write is just as pure: compute it once before the elements, in Python's left-to-right order, as a number
+    leaf. Found writing the numpy card for the launch thread, where it's the first way most people write it.
