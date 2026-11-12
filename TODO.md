@@ -540,3 +540,7 @@ Spills per line, once cimo can report them.
     constants, attributes and numpy or `math` calls on those, not reductions. A reduction of an array the expression
     doesn't write is just as pure: compute it once before the elements, in Python's left-to-right order, as a number
     leaf. Found writing the numpy card for the launch thread, where it's the first way most people write it.
+26. **Preflight wraps the reason line too:** hints wrap at 80 columns, but the reason after the carets doesn't, so the
+    dict message ("dicts aren't compiled unless their keys are constant strings, written where the dict is made (an
+    empty one would gain keys)") prints as one line of about 130 characters, in `preflight`, `preflight --run` and
+    the `FallbackWarning`-style summaries. Wrap it like the hint, under the carets' column or the `│` gutter.
