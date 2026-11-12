@@ -51,7 +51,7 @@ Requires CPython 3.12 or newer. numpy is only needed for your arrays.
 
 ## Live demo
 
-<img src="https://raw.githubusercontent.com/farizrahman4u/scramjit/main/docs/readme/demo.gif" alt="The live demo: a flock of boids runs as plain Python, updating every couple of seconds. scramjit is switched on, the Python is swept into generated C, and the flock moves smoothly." width="840">
+<img src="https://raw.githubusercontent.com/farizrahman4u/scramjit/main/docs/readme/demo.gif" alt="The live demo: a flock of 1,200 boids runs slowly as plain Python. scramjit is switched on, the Python is swept into generated C, and the flock moves smoothly." width="840">
 
 [The demo](https://www.scramjit.dev/#lab) runs Pyodide, scramjit and cimo in the browser, with no
 compile server, and targets WebAssembly. The code is editable and recompiles as you type.
