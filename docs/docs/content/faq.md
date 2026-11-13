@@ -10,7 +10,7 @@ If one works for you, it has a head start. LLVM-based JITs are mature and vector
 
 ## Is it only for numeric code?
 
-The supported types are numeric: scalars, arrays, tuples and fixed-size lists. But the target is any loop the interpreter is slow at, not only math: searches, flood fills, dynamic programming and scans over byte buffers fit as long as they work on those types.
+Mostly: numbers, numpy arrays, tuples, lists (including lists that grow), sets, dicts with fixed keys and instances of your own classes. The target is any loop the interpreter is slow at, not only math: searches, flood fills, dynamic programming and scans over byte buffers fit as long as they work on those types. Strings don't compile yet.
 
 ## What if it can't compile my function?
 
