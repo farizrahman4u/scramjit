@@ -30,7 +30,9 @@ Anything that needs Python objects at runtime: objects whose classes run code of
 
 ## Will it vectorize my loop?
 
-scramjit emits scalar C. It is built for loops that don't vectorize; for simple array arithmetic in an environment where numpy runs, numpy is already fast.
+Often, on arm64 and x86-64. scramjit writes plain C loops, and cimo vectorizes the straight ones, 128 bits at a time on arm64 and 256 on x86-64 CPUs with AVX2: arithmetic on float64, float32 and integer arrays, choices like `x[i] if x[i] > 0.0 else 0.0` or a clamp, integer sums, loops over `uint8` images, a running maximum or minimum and its position (argmax), stencils such as `u[i - 1] + u[i + 1] - 2.0 * u[i]`, and whole-array expressions such as `a + b + c` or `np.sqrt(a)`. The results are the same as the scalar loop's.
+
+These stay scalar: float sums and dot products, which keep Python's order of additions; loops that call a `math` function checking its domain on each element, such as `math.sqrt` (with `parity=False` they vectorize); loops where each step depends on the one before, like a moving average; and everything in the browser, since cimo doesn't vectorize WebAssembly yet.
 
 ## Is the generated code sandboxed?
 
