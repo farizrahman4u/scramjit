@@ -43,3 +43,26 @@ def test_workers_load_every_module_scramjit_imports():
             seen.add(name)
             need |= imports(name) - seen
         assert seen <= listed, (path, sorted(seen - listed))
+
+
+def test_wasm_tab_disassembles_the_compiled_module():
+    """The site's WebAssembly tab prints the module scramjit compiled (entry.module), with cimo.wat: nothing is rebuilt."""
+    import sys
+    import numpy as np
+    from scramjit import scram
+
+    @scram
+    def twice(x):
+        for i in range(len(x)):
+            x[i] *= 2
+
+    x = np.arange(4.0)
+    twice(x)
+    assert list(x) == [0, 2, 4, 6]
+    entry = next(v for v in twice._cache.values() if hasattr(v, 'source'))
+    assert entry.module.sj_kernel is not None
+    if sys.platform == 'emscripten':        # module.wasm is Pyodide's
+        from cimo import wat
+        text, sections, others = wat.disassemble(entry.module.wasm, {'sj_kernel'})
+        assert entry.module.wasm[:4] == b'\0asm' and '(func $sj_kernel' in text
+        assert any(n == 'code' for n, _ in sections)
