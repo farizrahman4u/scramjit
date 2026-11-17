@@ -275,7 +275,6 @@ after with `bench/`, and write the numbers into the item when done.
   "Big"; `tests/test_interrupt.py::test_a_custom_handler_doesnt_stop_the_kernel` fails until then). Keep it for Windows.
 - **`module.cached` (cimo 2026-11-07):** `preflight --run` can show `disk`: issue #4.
 - **Public cache export/import (cimo 2026-11-07):** the LLM demo can switch to it: issue #2.
-- **The CLI framework is public (cimo 2026-11-07):** replace the copies in `scramjit/cli/`: issue #3.
 - **Inlining spends its budget on the deepest loops first (cimo 2026-11-07),** and helpers no bigger than their call
   always inline: the four wrapping helpers made macros for this can go back to functions. llama2 tok/s not
   re-measured yet.

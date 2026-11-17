@@ -142,6 +142,14 @@ def test_mistakes_are_explained(proj, args, needle, also):
     assert 'Traceback' not in r.stderr
 
 
+def test_the_cli_is_cimos():
+    import cimo.cli.parse
+    from scramjit.cli import commands
+    root = commands.build_tree()
+    assert type(root) is cimo.cli.parse.Command and commands.UsageError is cimo.cli.parse.UsageError
+    assert root.unknown_hint(root, 'sim.py') == 'to check it: `scramjit preflight sim.py`'
+
+
 def test_default_path_and_no_functions(proj, tmp_path_factory):
     assert '✓ ema' in run(['-m', 'scramjit', 'preflight'], proj).stdout
     empty = tmp_path_factory.mktemp('empty')
