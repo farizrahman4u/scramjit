@@ -232,10 +232,9 @@ is no sandbox.
 
 Pre-release: the API may still change.
 
-- **Releases.** 0.0.5 is on PyPI, needing CPython 3.12 or newer (0.0.4 didn't import before 3.12, or on 3.14). New since
-  0.0.4: tested in CI on every platform below; numpy's results on x86-64 too (its AVX-512 math, Windows' `intc`, signed
-  zeros, `arange`), and Python 3.14's wording of math errors. 0.0.4 added lists that grow, sets, sorting, comparisons,
-  instances and whole-array arithmetic.
+- **Releases.** 0.0.6 is on PyPI, needing CPython 3.12 or newer and cimo 0.0.6, which fixes an x86-64 miscompile (a NaN's
+  sign flipped by a float subtraction, seen on CPUs with AVX-512). 0.0.5 added CI on every platform below and numpy's
+  results on x86-64; 0.0.4 lists that grow, sets, sorting, comparisons, instances and whole-array arithmetic.
 - **Tests.** About 3,000 differential tests compare each compiled function with CPython and numpy, bit for bit. CI runs them on Linux and Windows, x86-64 and arm64, macOS on Apple silicon, CPython 3.12, 3.13 (free-threaded too) and 3.14, and runs part of them in Pyodide. A NaN's sign bit may differ from CPython's, which itself differs between builds (see Gotchas).
 - A function that doesn't compile whole has its loops compiled on their own, where they fit.
 - Lists that grow, nest and are shared, as Python's (`out.append((i, j))`, lists of lists of arrays, lists

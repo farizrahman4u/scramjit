@@ -5,9 +5,9 @@ Biggest first. `requirements.md` is the spec; this is the work queue. Smaller it
 
 ## Release
 
-0. **0.0.5 released (2026-11-09),** with cimo 0.0.5: CI on every platform, CPython 3.12+. The rule stays: the README, site and
+0. **0.0.6 released (2026-11-22),** with cimo 0.0.6 (a NaN-sign miscompile fixed on x86-64). The rule stays: the README, site and
    docs describe the released version, and a feature on `main` but not on PyPI is released the same day or marked
-   "from 0.0.6" wherever it's mentioned (`AGENTS.md`). `tests/test_version.py` checks the version agrees everywhere it's written.
+   "from 0.0.7" wherever it's mentioned (`AGENTS.md`). `tests/test_version.py` checks the version agrees everywhere it's written.
 
 ## Object model: what's left
 
@@ -268,8 +268,6 @@ after with `bench/`, and write the numbers into the item when done.
 
 ## From cimo
 
-- **A module's WebAssembly is public (cimo 2026-11-07):** use it in the lab and LLM demo: issue #1.
-
 - **Ctrl-C stops a running kernel (cimo 2026-11-07, Linux and macOS):** the generated `if (*sj_stop) SJ_FAIL(...)` check
   in every loop can go, once cimo leaves a kernel running under a SIGINT handler of the program's own (its TODO,
   "Big"; `tests/test_interrupt.py::test_a_custom_handler_doesnt_stop_the_kernel` fails until then). Keep it for Windows.
@@ -324,8 +322,6 @@ Each has a matching entry in cimo's `TODO.md`, which asks for a note here when i
   expressions (cimo `TODO.md`: "Slower than gcc -O3 on scramjit's kernels").
 
 - **The LLM demo moves compiled code by listing what changes in `CIMO_CACHE_DIR`:** issue #2.
-
-- **The demo's WebAssembly tab calls `cimo.wasm.build`:** issue #1.
 
 ## Line counts, what's left
 

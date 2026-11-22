@@ -1843,7 +1843,7 @@ def _copy_back(lst, a, et, before):
 
 
 class Compiled:
-    __slots__ = ('gl_types', 'kernel', 'ret', 'types', 'source', 'libm', 'locals', 'checks', 'hoisted', 'gotchas', 'stop', 'rerun', 'outs', 'lists',
+    __slots__ = ('gl_types', 'module', 'kernel', 'ret', 'types', 'source', 'libm', 'locals', 'checks', 'hoisted', 'gotchas', 'stop', 'rerun', 'outs', 'lists',
                  'counts', 'count_lines', 'count_heads', 'count_rest', 'array_args', 'records', 'io_size', 'free', 'frames', 'columns', 'instance_ret', 'tb_at')
 
     def __init__(self, kernel, ret, types_, source, libm, locals_=None, checks=None, hoisted=(), gotchas=None, stop=False, rerun=False):
@@ -2862,6 +2862,7 @@ class Function:
             self._np = numpy
         entry = Compiled(kernel, c.ret, key, source, _libm_table() if c.uses_libm else None,
                          c.shown_types(), c.checks, c.hoisted_lines, c.gotchas, c.uses_stop, c.uses_rerun)
+        entry.module = module            # cimo's module: in Pyodide, module.wasm is its WebAssembly (the site shows it)
         entry.outs = [(i, k, 8 * c.out_slot(n), c.env[flat]) for n, (flat, i, k) in enumerate(c.outs)]
         entry.lists = c.written_lists()
         entry.columns = c.written_columns()
