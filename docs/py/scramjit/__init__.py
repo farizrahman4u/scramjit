@@ -12,7 +12,7 @@
 from ._dispatch import Function
 from ._errors import CompileError, FallbackWarning
 
-__version__ = '0.0.5'
+__version__ = '0.0.6'
 __all__ = ['scram', 'CompileError', 'FallbackWarning']
 
 

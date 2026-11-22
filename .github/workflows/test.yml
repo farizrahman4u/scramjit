@@ -11,7 +11,7 @@ on:
 
 # the cimo every job but released-cimo tests against: main, or the exact tag being released
 env:
-  CIMO_REF: main
+  CIMO_REF: v0.0.6      # the release scramjit 0.0.6 needs; main again after it
 
 # a newer push to the same branch cancels the run it supersedes
 concurrency:

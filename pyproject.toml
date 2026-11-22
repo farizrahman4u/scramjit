@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "scramjit"
-version = "0.0.5"
+version = "0.0.6"
 description = "Python at native speed: a JIT written in pure Python, compiling through cimo."
 readme = "README.md"
 license = { text = "MIT" }
 authors = [{ name = "Fariz Rahman" }]
 requires-python = ">=3.12"
-dependencies = ["cimo>=0.0.5"]
+dependencies = ["cimo>=0.0.6"]
 classifiers = [
     "Programming Language :: Python :: 3",
     "Topic :: Software Development :: Compilers",
