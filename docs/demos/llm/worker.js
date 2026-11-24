@@ -1,5 +1,5 @@
 // Python, numpy, the compiler and the model all run in workers, so the page never blocks. One worker holds the
-// weights and writes the story. A second, with no weights, compiles edits and hands over the compiled files.
+// weights and writes the story. A second, with no weights, compiles edits and hands over their cimo cache entries.
 'use strict';
 const PYODIDE = 'https://cdn.jsdelivr.net/pyodide/v0.27.7/full/';
 const SJ = ['__init__.py', '_compare.py', '_compiler.py', '_dispatch.py', '_errors.py', '_glist.py', '_gset.py', '_interrupt.py', '_lift.py', '_mathlib.py', '_nploops.py', '_preflight.py', '_pysets.py', '_runtime.py', '_types.py', '_webs.py'];
@@ -12,16 +12,24 @@ const say = msg => postMessage({ type: 'status', msg });
 const breathe = () => new Promise(r => setTimeout(r));
 const jsonOf = s => JSON.parse(s);
 
-// Compiled code stays between visits, as a cache of its source: cimo uses a file only for the source it was built
-// from. Files live in the browser's cache, with a list of which source made which. Nothing here may stop the demo.
-const COMPILED = 'scramjit-llm-compiled-1', LIST = 'https://compiled.invalid/list', KEEP = 8;
-const fileUrl = path => 'https://compiled.invalid' + path;
-let keptList = null;                                   // { stamp, codes: [{ code, paths }] }, oldest first
+// Compiled code stays between visits as cimo cache entries (module.cache_entry): cimo uses one only for the source
+// it was built from. Entries live in the browser's cache, with a list of which source made which. Nothing here may
+// stop the demo.
+const COMPILED = 'scramjit-llm-compiled-2', LIST = 'https://compiled.invalid/list', KEEP = 8;
+const entryUrl = name => 'https://compiled.invalid/' + name;
+let keptList = null;                                   // { stamp, codes: [{ code, names }] }, oldest first
+
+// [{ name, data }]: the cache entries of what Python compiled last
+function takeEntries() {
+  const p = demo.take_entries();
+  try { return p.toJs().map(([name, data]) => ({ name, data })); } finally { p.destroy(); }
+}
 
 async function restoreCompiled() {
   try {
     const stamp = demo.cache_stamp();
     keptList = { stamp, codes: [] };
+    caches.delete('scramjit-llm-compiled-1').catch(() => {});        // compiled files from before entries
     const store = await caches.open(COMPILED);
     const r = await store.match(LIST);
     const list = r && await r.json();
@@ -29,33 +37,30 @@ async function restoreCompiled() {
     else if (list) {
       for (const k of list.codes) {
         let whole = true;
-        for (const path of k.paths) {
-          const f = await store.match(fileUrl(path));
-          if (!f) { whole = false; continue; }
-          py.FS.mkdirTree(path.slice(0, path.lastIndexOf('/')));
-          py.FS.writeFile(path, new Uint8Array(await f.arrayBuffer()));
+        for (const name of k.names) {
+          const f = await store.match(entryUrl(name));
+          if (!f || !demo.add_entry(new Uint8Array(await f.arrayBuffer()))) whole = false;
         }
         if (whole) keptList.codes.push(k);
       }
     }
   } catch { keptList = null; }
-  demo.cache_changes();
   return keptList ? keptList.codes.map(k => k.code) : [];
 }
 
 async function keepCompiled(code) {
-  const paths = jsonOf(demo.cache_changes());
+  const entries = takeEntries();
   if (!keptList) return;
   try {
     const store = await caches.open(COMPILED);
-    for (const path of paths) await store.put(fileUrl(path), new Response(py.FS.readFile(path)));
     const old = keptList.codes.find(k => k.code === code);
-    if (old && !paths.length) { keptList.codes = keptList.codes.filter(k => k !== old).concat(old); }   // used again: newest
-    else keptList.codes = keptList.codes.filter(k => k !== old).concat({ code, paths: [...new Set([...(old?.paths || []), ...paths])] });
+    for (const e of entries) if (!old?.names.includes(e.name)) await store.put(entryUrl(e.name), new Response(e.data));
+    const names = [...new Set([...(old?.names || []), ...entries.map(e => e.name)])];
+    keptList.codes = keptList.codes.filter(k => k !== old).concat({ code, names });   // the newest last
     const gone = keptList.codes.slice(0, -KEEP);
     keptList.codes = keptList.codes.slice(-KEEP);
-    const used = new Set(keptList.codes.flatMap(k => k.paths));
-    for (const k of gone) for (const path of k.paths) if (!used.has(path)) await store.delete(fileUrl(path));
+    const used = new Set(keptList.codes.flatMap(k => k.names));
+    for (const k of gone) for (const name of k.names) if (!used.has(name)) await store.delete(entryUrl(name));
     await store.put(LIST, new Response(JSON.stringify(keptList)));      // last: it says the files are all there
   } catch { /* out of space, or private browsing: the next visit compiles */ }
 }
@@ -122,14 +127,14 @@ onmessage = async ({ data: m }) => {
     if (m.type === 'precompile') {
       await breathe();
       const r = jsonOf(demo.precompile(m.code));
-      const files = (r.files || []).map(path => ({ path, data: py.FS.readFile(path) }));
-      postMessage({ type: 'precompiled', id: m.id, seconds: r.seconds, error: r.error, files }, files.map(f => f.data.buffer));
+      const entries = r.error ? [] : takeEntries();
+      postMessage({ type: 'precompiled', id: m.id, seconds: r.seconds, error: r.error, entries }, entries.map(e => e.data.buffer));
     }
     if (m.type === 'precompileHeat') {
       await breathe();
       const r = jsonOf(demo.precompile(m.code, true));
-      const files = (r.files || []).map(path => ({ path, data: py.FS.readFile(path) }));
-      postMessage({ type: 'heatFiles', code: m.code, error: r.error, files }, files.map(f => f.data.buffer));
+      const entries = r.error ? [] : takeEntries();
+      postMessage({ type: 'heatEntries', code: m.code, error: r.error, entries }, entries.map(e => e.data.buffer));
     }
     if (m.type === 'heat') {
       await breathe();
@@ -137,7 +142,7 @@ onmessage = async ({ data: m }) => {
       postMessage({ type: 'heat', code: m.code, on: m.on, ...r });
       if (m.on && !r.error && !r.stale) await keepCompiled('counted\0' + m.code);
     }
-    if (m.type === 'adopt') for (const f of m.files) { py.FS.mkdirTree(f.path.slice(0, f.path.lastIndexOf('/'))); py.FS.writeFile(f.path, f.data); }
+    if (m.type === 'adopt') for (const e of m.entries) demo.add_entry(e.data);
     if (m.type === 'compile') {
       await breathe();
       const r = jsonOf(demo.compile_forward(m.code, m.compiled));

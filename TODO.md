@@ -272,7 +272,6 @@ after with `bench/`, and write the numbers into the item when done.
   in every loop can go, once cimo leaves a kernel running under a SIGINT handler of the program's own (its TODO,
   "Big"; `tests/test_interrupt.py::test_a_custom_handler_doesnt_stop_the_kernel` fails until then). Keep it for Windows.
 - **`module.cached` (cimo 2026-11-07):** `preflight --run` can show `disk`: issue #4.
-- **Public cache export/import (cimo 2026-11-07):** the LLM demo can switch to it: issue #2.
 - **The CLI framework is public (cimo 2026-11-07):** replace the copies in `scramjit/cli/`: issue #3.
 - **Inlining spends its budget on the deepest loops first (cimo 2026-11-07),** and helpers no bigger than their call
   always inline: the four wrapping helpers made macros for this can go back to functions. llama2 tok/s not
@@ -321,8 +320,6 @@ Each has a matching entry in cimo's `TODO.md`, which asks for a note here when i
   body (`hoist_wraps`), `//` and `%` computed as one division and one remainder into
   temporaries. Both help any compiler; revisit what else can go once cimo merges repeated
   expressions (cimo `TODO.md`: "Slower than gcc -O3 on scramjit's kernels").
-
-- **The LLM demo moves compiled code by listing what changes in `CIMO_CACHE_DIR`:** issue #2.
 
 ## Line counts, what's left
 

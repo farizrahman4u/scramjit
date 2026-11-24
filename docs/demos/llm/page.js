@@ -97,10 +97,10 @@ function startCompiler() {
 function dropCompiler() { clearTimeout(compilerDog); if (compiler) compiler.terminate(); compiler = null; compilerUp = false; }
 function onCompiler({ data: m }) {
   if (m.type === 'compilerReady') { compilerUp = true; state({ compilerUp: m.seconds }); pump(); }
-  if (m.type === 'heatFiles') {
+  if (m.type === 'heatEntries') {
     if (!heatWanted || m.code !== heatAsked) return;
     if (m.error) return heatFailed(m.error);
-    worker.postMessage({ type: 'adopt', files: m.files }, m.files.map(f => f.data.buffer));
+    worker.postMessage({ type: 'adopt', entries: m.entries }, m.entries.map(e => e.data.buffer));
     worker.postMessage({ type: 'heat', code: m.code, on: true });
   }
   if (m.type === 'failed') {                           // no second worker: compile in the writing one
@@ -115,7 +115,7 @@ function onCompiler({ data: m }) {
     background = null;
     if (want || b.stale) { state({ dropped: (window.demoState?.dropped || 0) + 1 }); return pump(); }   // overtaken by newer code
     if (m.error) return rejected(m.error, b.intro);
-    worker.postMessage({ type: 'adopt', files: m.files }, m.files.map(f => f.data.buffer));
+    worker.postMessage({ type: 'adopt', entries: m.entries }, m.entries.map(e => e.data.buffer));
     swapIn(b.code, b.name, b.intro, m.seconds, b.compiled);
   }
 }
