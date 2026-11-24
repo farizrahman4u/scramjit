@@ -6,7 +6,7 @@ import linecache
 import os
 
 from .. import _dispatch, _preflight as P
-from .term import Terminal, visible_len, wrap
+from cimo.cli.term import Terminal, visible_len, wrap
 
 KEEP_HINT = ('a bounds check runs on every iteration; index with the loop variable over `range(len(a))`, '
              'or use `@scram(boundscheck=False)` once verified')

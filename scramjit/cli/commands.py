@@ -12,13 +12,19 @@ import time
 import traceback
 import warnings
 
-from .parse import Command, UsageError
-from .term import Spinner
+from cimo.cli.parse import Command, UsageError
+from cimo.cli.term import Spinner
+
+
+def _file_hint(cmd, word):
+    if cmd.parent is None and 'preflight' in cmd.commands and (word.endswith('.py') or ':' in word or '/' in word):
+        return "to check it: `%s preflight %s`" % (cmd.name, word)
+    return None
 
 
 def build_tree():
     from .. import __version__
-    root = Command('scramjit', f'scramjit {__version__}, Python at native speed',
+    root = Command('scramjit', f'scramjit {__version__}, Python at native speed', unknown_hint=_file_hint,
                    description='A JIT written in pure Python. Decorate a function with `@scram` and its loops run '
                                'as machine code. This command shows what compiles, and why not when it doesn\'t.')
     root.opt('-h', '--help', flag=True, help='Show help for a command')
@@ -329,7 +335,7 @@ def _cache(sub):
 
 
 def cmd_help(ctx):
-    from .parse import render_help
+    from cimo.cli.parse import render_help
     cmd = ctx.command.root
     for w in ctx.values.get('command') or ():
         sub = cmd.find_command(w)
@@ -342,18 +348,17 @@ def cmd_help(ctx):
 
 
 def cmd_completion(ctx):
-    from . import completion
+    from cimo.cli import completion
     shell = ctx.values['shell']
-    scripts = {'bash': completion.BASH, 'zsh': completion.ZSH, 'fish': completion.FISH}
-    if shell not in scripts:
+    if shell not in completion.SHELLS:
         raise UsageError(f"unsupported shell '{shell}'", ctx.command,
-                         difflib.get_close_matches(shell, list(scripts), n=1, cutoff=0.5), hint='supported: bash, zsh, fish')
-    sys.stdout.write(scripts[shell])
+                         difflib.get_close_matches(shell, list(completion.SHELLS), n=1, cutoff=0.5), hint='supported: bash, zsh, fish')
+    sys.stdout.write(completion.script(shell, 'scramjit'))
     return 0
 
 
 def cmd_complete(ctx):
-    from .parse import complete
+    from cimo.cli.parse import complete
     cands, kind = complete(ctx.command.root, ctx.values['words'] or [''])
     for c in cands:
         sys.stdout.write(c + '\n')

@@ -36,8 +36,8 @@ def _split_run(argv):
 
 def main(argv=None):
     """Run the scramjit command line; returns the exit status."""
-    from .term import Terminal
-    from .parse import parse, render_help, usage_line, UsageError
+    from cimo.cli.term import Terminal
+    from cimo.cli.parse import parse, render_help, usage_line, UsageError
     from . import commands
     argv = sys.argv[1:] if argv is None else list(argv)
     mode = _color_mode(argv)
