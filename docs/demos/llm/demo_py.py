@@ -9,17 +9,17 @@ import struct
 import sys
 import time
 
-os.environ.setdefault('CIMO_CACHE_DIR', '/tmp/cimo_cache')
-
-import lab  # noqa: E402  (the site's demos: the syntax tree with its types, and the WebAssembly text)
-import numpy as np  # noqa: E402
-from scramjit import scram  # noqa: E402
+import cimo
+import lab  # the site's demos: the syntax tree with its types, and the WebAssembly text
+import numpy as np
+from scramjit import scram
 
 BOS, EOS = 1, 2
 # Fixed names: a compiled module's cache key comes from its source, and two workers share compiled modules.
 _dir = '/tmp/forward_src'
 os.makedirs(_dir, exist_ok=True)
 _memo = {}
+_fresh = []             # the cache entries of what was compiled last, for take_entries
 
 
 class State:
@@ -151,6 +151,7 @@ def compile_forward(code, compiled=True):
                     raise ValueError('this forward pass produces NaN or infinite logits')
                 _memo[code] = fn, plain
                 out = _stages(fn, code)
+            _keep(fn)
             out['cached'] = cached
         else:
             fn, plain = None, _load(code)
@@ -179,43 +180,48 @@ def cache_stamp():
     return h.hexdigest()
 
 
-_seen = {}
+def _keep(fn):
+    """fn's compiled modules as cimo cache entries, each named by its content, for take_entries."""
+    global _fresh
+    _fresh = []
+    for entry in fn._cache.values():
+        if getattr(entry, 'module', None) is not None:
+            data = entry.module.cache_entry()
+            _fresh.append((hashlib.sha256(data).hexdigest()[:24], data))
 
 
-def cache_changes():
-    """The cache files written since the last time this was asked."""
-    global _seen
-    now = _cached()
-    changed = [p for p, m in now.items() if _seen.get(p) != m]
-    _seen = now
-    return json.dumps(changed)
+def take_entries():
+    """[(name, bytes)]: the cache entries of what was compiled last. Another worker, or a later visit, adds them
+    with add_entry and then compiles the same code without compiling anything."""
+    global _fresh
+    out, _fresh = _fresh, []
+    return out
 
 
-def _cached():
-    found = {}
-    for root, _, names in os.walk(os.environ['CIMO_CACHE_DIR']):
-        for n in names:
-            found[os.path.join(root, n)] = os.path.getmtime(os.path.join(root, n))
-    return found
+def add_entry(data):
+    """Puts a cache entry from take_entries into cimo's cache; False if cimo won't take it."""
+    try:
+        cimo.add_cache_entry(data.to_bytes())
+        return True
+    except ValueError:
+        return False
 
 
 def precompile(code, counts=False):
-    """For the worker with no weights: compiles against arrays of the right types and hands back the cache
-    files, so the worker that's writing the story only has to load them. Empty shapes: nothing runs."""
+    """For the worker with no weights: compiles against arrays of the right types and keeps the cache entries
+    (take_entries), so the worker that's writing the story only has to load them. Empty shapes: nothing runs."""
     t = time.perf_counter()
-    before = _cached()
     error = fn = None
     try:
         fn = scram(fallback=False, counts=counts)(_load(code))
         fn(BOS, 0, 0, 0, 0, 6, 0, 0, *[np.zeros(1) for _ in range(23)])
     except BaseException as e:
         error = _message(e)
-    now = _cached()
-    files = [p for p, m in now.items() if before.get(p) != m]
     # the call only exists to compile, and on these arrays it may well raise: that says nothing about the code
     if error and not (fn is not None and fn.signatures):
         return json.dumps({'error': error})
-    return json.dumps({'seconds': time.perf_counter() - t, 'files': files})
+    _keep(fn)
+    return json.dumps({'seconds': time.perf_counter() - t})
 
 
 def count_lines(code, on):
@@ -231,6 +237,7 @@ def count_lines(code, on):
         fn(*_args(BOS, 0, [c.copy() for c in S.caches], [w.copy() for w in S.work]))
         S.logits[:] = keep
         S.counted = fn
+        _keep(fn)
         return json.dumps({})
     except BaseException as e:
         return json.dumps({'error': _message(e)})
