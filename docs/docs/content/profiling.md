@@ -77,7 +77,7 @@ summarize runs as Python
 ```
 
 - **native** and **python** are the time each function spent in compiled code and in code that fell back. The native share at the top is native time over the whole run; the rest is your own Python and everything else.
-- **compile** is the time spent compiling; it's much shorter when the code came from the [disk cache](caching.md). **×2** means two signatures.
+- **compile** is the time spent compiling; it's much shorter when the code came from the [disk cache](caching.md), which **(disk)** after the time marks (from 0.0.7). **×2** means two signatures.
 - Functions that weren't called don't appear; run the static mode for those.
 
 Arguments after the script or module are passed to it.

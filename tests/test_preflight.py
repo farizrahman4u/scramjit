@@ -439,6 +439,18 @@ def test_a_second_process_reuses_the_disk_cache(tmp_path):
     assert {f: os.path.getmtime(cc / f) for f in _images(cc)} == before     # read, not rebuilt
 
 
+def test_run_report_marks_a_compile_from_the_disk_cache(proj, tmp_path):
+    cc = str(tmp_path / 'cc')
+    first = run(['-m', 'scramjit', 'preflight', 'sim.py:grid', '--run', 'app.py'], proj, CIMO_CACHE_DIR=cc)
+    second = run(['-m', 'scramjit', 'preflight', 'sim.py:grid', '--run', 'app.py'], proj, CIMO_CACHE_DIR=cc)
+    grid = lambda r: [ln for ln in r.stderr.splitlines() if '✓ grid' in ln or '· compiled in' in ln]  # noqa: E731
+    assert len(grid(first)) == 2 and not any('(disk)' in ln for ln in grid(first)), first.stderr
+    assert len(grid(second)) == 2 and all(ln.endswith(' ms (disk)') or ' s (disk) ' in ln for ln in grid(second)), second.stderr
+    second = run(['-m', 'scramjit', 'preflight', '--json', '-o', 'out.json', '--run', 'app.py'], proj, CIMO_CACHE_DIR=cc)
+    rows = {f['name']: f for f in json.loads((proj / 'out.json').read_text())['functions']}
+    assert rows['grid']['disk'] and rows['ema']['disk'] and not rows['summarize']['disk']
+
+
 def test_cache_false_writes_nothing(tmp_path):
     (tmp_path / 'p.py').write_text(textwrap.dedent('''
         import numpy as np
