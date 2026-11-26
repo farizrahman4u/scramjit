@@ -271,7 +271,6 @@ after with `bench/`, and write the numbers into the item when done.
 - **Ctrl-C stops a running kernel (cimo 2026-11-07, Linux and macOS):** the generated `if (*sj_stop) SJ_FAIL(...)` check
   in every loop can go, once cimo leaves a kernel running under a SIGINT handler of the program's own (its TODO,
   "Big"; `tests/test_interrupt.py::test_a_custom_handler_doesnt_stop_the_kernel` fails until then). Keep it for Windows.
-- **`module.cached` (cimo 2026-11-07):** `preflight --run` can show `disk`: issue #4.
 - **Inlining spends its budget on the deepest loops first (cimo 2026-11-07),** and helpers no bigger than their call
   always inline: the four wrapping helpers made macros for this can go back to functions. llama2 tok/s not
   re-measured yet.
@@ -413,7 +412,7 @@ Spills per line, once cimo can report them.
    returned or combined with a float. Not yet: other uses of such a variable (`-s`, `s + 1`, `t = s`, `a[s]`, `if s:`), and
    `s = n` from an int variable, each of which keeps the function in Python.
 11. **Rest of M3:** run the M0 kernels in Pyodide as a test, not only through the site; preflight's
-   per-loop report once cimo exposes one (cimo's `TODO.md`); the `disk` label is issue #4.
+   per-loop report once cimo exposes one (cimo's `TODO.md`).
 12. **`n ** k` with a negative `k` and `x ** 0.5` with a negative `x`, what's left:** a function that writes nothing
    reruns the call as Python there. One that writes still raises: resuming in Python alongside loop lifting would remove
    that difference too.

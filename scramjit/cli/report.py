@@ -260,7 +260,7 @@ def function_report(f, signature, stream):
         names = ', '.join(x.name if x is not None else '?' for x in key[:len(key) - len(f._hidden or ())])
         if isinstance(entry, _dispatch.Compiled):
             s = f._compile_s.get(key)
-            when = f' · compiled in {s * 1000:.0f} ms' if s is not None else ''
+            when = f' · compiled in {s * 1000:.0f} ms' + (' (disk)' if key in f._from_disk else '') if s is not None else ''
             lines_table(t, lines, f._first, fdef, offset, f'{f.__name__}({names})', _state_line(t, True, f'· {where}{when}'),
                         (entry.checks, entry.hoisted, f._boundscheck), [], entry.locals, entry.gotchas, counts=counts)
         else:
@@ -291,11 +291,13 @@ def run_rows():
             native = sum(s[1] for x in done for s in x._stats.values())          # lifted loops: inside its Python time
             building = sum(v for x in done for v in x._compile_s.values())
             compiled = sum(isinstance(f._cache.get(k), _dispatch.Compiled) for k in st)
+            made = [(f, k) for k in st if k in f._compile_s] + [(x, k) for x in done for k in x._compile_s]
             rows.append({'function': f, 'name': f.__name__, 'calls': sum(s[0] for s in st.values()),
                          'compile': sum(f._compile_s.get(k, 0.0) for k in st) + building,
                          'native': sum(s[1] for s in st.values()) + native,
                          'python': max(sum(s[2] for s in st.values()) - native - building, 0.0), 'signatures': len(st),
                          'compiled': compiled,
+                         'disk': bool(made) and all(k in x._from_disk for x, k in made),   # every compile was a disk-cache load
                          'state': 'compiled' if compiled == len(st) else 'partly' if f._native_loops() else 'python'})
     return rows
 
@@ -333,13 +335,15 @@ def run(t, total, status, allow_partial=False):
     secs = lambda v: f'{v:.2f} s' if v else '–'  # noqa: E731
     names = [r['name'] + (f' ×{r["signatures"]}' if r['signatures'] > 1 else '') for r in rows]
     width = max(len(n) for n in names + ['function'])
-    t.write(t.style(f'  {"  "}{"function":<{width}}  {"calls":>8}  {"compile":>7}  {"native":>7}  {"python":>7}', 'heading'))
+    built = [secs(r['compile']) + (' (disk)' if r['disk'] else '') for r in rows]
+    across = max(len(b) for b in built + ['compile'])
+    t.write(t.style(f'  {"  "}{"function":<{width}}  {"calls":>8}  {"compile":>{across}}  {"native":>7}  {"python":>7}', 'heading'))
     bad = 0
-    for r, n in zip(rows, names):
+    for r, n, b in zip(rows, names, built):
         ok = r['compiled'] == r['signatures']
         bad += r['state'] == 'python' or (r['state'] == 'partly' and not allow_partial)
         mark = _partly(t) if r['state'] == 'partly' else _mark(t, ok)
-        t.write(f'  {mark} {n:<{width}}  {r["calls"]:>8,}  {secs(r["compile"]):>7}  {secs(r["native"]):>7}  {secs(r["python"]):>7}')
+        t.write(f'  {mark} {n:<{width}}  {r["calls"]:>8,}  {b:>{across}}  {secs(r["native"]):>7}  {secs(r["python"]):>7}')
     hints = run_hints(rows)
     if hints:
         t.write('')

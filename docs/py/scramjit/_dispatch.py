@@ -2407,6 +2407,7 @@ class Function:
         self._plans = {}          # the arguments' Python types -> a function that makes the call (see _make_plan)
         self._gl_held = None      # positions of the arguments a list passed in must be held by reference for (_glist_key)
         self._compile_s = {}      # signature -> seconds spent compiling it
+        self._from_disk = set()   # the signatures cimo loaded from its disk cache, compiling nothing
         self._why = {}            # signature -> (line, reason) it runs as Python
         self._stats = {}          # signature -> [calls, native seconds, Python seconds], under preflight --run
         self._lock = threading.Lock()
@@ -2766,6 +2767,8 @@ class Function:
             try:
                 entry = self._compile(key, args)
                 self._compile_s[key] = time.perf_counter() - t0
+                if entry.module.cached:
+                    self._from_disk.add(key)
                 if _log:
                     print(f'scramjit: compiled {self.__name__}({sig}) in {self._compile_s[key]:.2f} s', file=sys.stderr)
             except Unsupported as u:
